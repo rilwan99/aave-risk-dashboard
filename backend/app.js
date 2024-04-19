@@ -1,16 +1,24 @@
 const express = require('express');
 const app = express();
 
-const port = 9000; // You can use any available port here
+// Import routes
+const reservesRouter = require('./api/reserves');
 
-const riskRoutes = require('./routes/risk');
+app.use('/api/reserves', reservesRouter);
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+    res.send('Service is Running');
+  });
+  
+// Catch-all for unhandled routes
+app.use((req, res, next) => {
+    res.status(404).send("Sorry can't find that!");
 });
 
-app.use('/api/risk', riskRoutes);
-
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
+
+module.exports = app;
