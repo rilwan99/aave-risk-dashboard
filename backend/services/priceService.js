@@ -25,14 +25,21 @@ async function getTokenPrices() {
       },
     });
 
-    // NOTE: weETH is omitted from upper case convertion to match coinmarketcap api convention
+    // NOTE: weETH & cbETH are omitted from being converted to upper case
+    //  to match coinmarketcap api convention
+
+    // Extracting only price data form API response
     const prices = reserves.map((reserve) => ({
-      symbol: reserve.symbol, 
+      symbol: reserve.symbol,
       price: response.data.data[
-        reserve.symbol === "weETH" ? "weETH" : reserve.symbol.toUpperCase()
+        reserve.symbol === "weETH" || reserve.symbol === "cbETH"
+          ? reserve.symbol
+          : reserve.symbol.toUpperCase()
       ]
         ? response.data.data[
-            reserve.symbol === "weETH" ? "weETH" : reserve.symbol.toUpperCase()
+            reserve.symbol === "weETH" || reserve.symbol === "cbETH"
+              ? reserve.symbol
+              : reserve.symbol.toUpperCase()
           ].quote.USD.price
         : "No price available",
     }));
