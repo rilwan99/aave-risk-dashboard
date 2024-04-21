@@ -17,6 +17,17 @@ function formatTokenAmounts(tokenDataArray) {
     });
 }
 
+function formatReserveCaps(reserveCaps) {
+    return reserveCaps.map(reserveCap => {
+        return {
+            symbol: reserveCap.symbol,
+            borrowCap: Number(reserveCap.borrowCap), 
+            supplyCap: Number (reserveCap.supplyCap)
+        }
+    })
+}
+
 module.exports = {
-    formatTokenAmounts
+    formatTokenAmounts, 
+    formatReserveCaps
 };

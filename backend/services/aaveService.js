@@ -15,7 +15,9 @@ async function getListOfReserves() {
   try {
     const reserveTokens = await contract.getAllReservesTokens();
     const tokenDetails = reserveTokens
-      .filter((tokenPair) => !["FXS", "STG", "KNC", "GHO"].includes(tokenPair[0])) // Exclude paused Tokens
+      .filter(
+        (tokenPair) => !["FXS", "STG", "KNC", "GHO"].includes(tokenPair[0])
+      ) // Exclude paused Tokens
       .map((tokenPair) => ({
         symbol: tokenPair[0],
         address: tokenPair[1],
@@ -39,7 +41,36 @@ async function getSupplyAmounts() {
   return supplyAmounts;
 }
 
+async function getBorrowAmounts() {
+  const tokenDetails = await getListOfReserves();
+  const borrowAmountPromises = tokenDetails.map((token) =>
+    contract.getTotalDebt(token.address).then((borrowAmount) => ({
+      symbol: token.symbol,
+      amount: borrowAmount,
+    }))
+  );
+  const borrowAmounts = await Promise.all(borrowAmountPromises);
+  return borrowAmounts;
+}
+
+async function getSupplyAndBorrowCaps() {
+  const tokenDetails = await getListOfReserves();
+  const supplyAndBorrowCapPromises = tokenDetails.map(async (token) => {
+    const reserveCaps = await contract.getReserveCaps(token.address);
+    return {
+      symbol: token.symbol,
+      borrowCap: reserveCaps[0],
+      supplyCap: reserveCaps[1],
+    };
+  });
+  const supplyAndBorrowCaps = await Promise.all(supplyAndBorrowCapPromises);
+
+  return supplyAndBorrowCaps;
+}
+
 module.exports = {
   getListOfReserves,
   getSupplyAmounts,
+  getBorrowAmounts,
+  getSupplyAndBorrowCaps
 };
