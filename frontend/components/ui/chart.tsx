@@ -12,20 +12,20 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// const data = [
-//   { week: "Jan", transactions: 100 },
-//   { week: "Feb", transactions: 150 },
-//   { week: "Mar", transactions: 200 },
-//   { week: "Apr", transactions: 180 },
-//   { week: "May", transactions: 200 },
-//   { week: "Jun", transactions: 170 },
-//   { week: "Jul", transactions: 190 },
-//   { week: "Aug", transactions: 180 },
-//   { week: "Sep", transactions: 215 },
-//   { week: "Oct", transactions: 195 },
-//   { week: "Nov", transactions: 230 },
-//   { week: "Dec", transactions: 205 },
-// ];
+const data = [
+  { week: "Jan", transactions: 100 },
+  { week: "Feb", transactions: 150 },
+  { week: "Mar", transactions: 200 },
+  { week: "Apr", transactions: 180 },
+  { week: "May", transactions: 200 },
+  { week: "Jun", transactions: 170 },
+  { week: "Jul", transactions: 190 },
+  { week: "Aug", transactions: 180 },
+  { week: "Sep", transactions: 215 },
+  { week: "Oct", transactions: 195 },
+  { week: "Nov", transactions: 230 },
+  { week: "Dec", transactions: 205 },
+];
 
 const TransactionBarChart = () => {
   const [loading, setLoading] = useState(true);
@@ -33,22 +33,22 @@ const TransactionBarChart = () => {
 
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/chart");
-        const result = await response.json();
-        setData(result);
-        setLoading(false);
-      } catch (error) {
-        console.log("Failed to fetch data");
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const response = await fetch("/api/chart");
+  //       const result = await response.json();
+  //       setData(result);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.log("Failed to fetch data");
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
 
   if (loading) {
