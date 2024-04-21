@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -17,9 +18,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <ThemeProvider attribute="class" defaultTheme="dark">
-        <body className={inter.className}>{children}</body>
-      </ThemeProvider>
+      <head>
+        <title>Aave Risk Dashboard</title>
+        <meta
+          name="AAVE-risk-dashboard"
+          content="Dashboard displaying on-chain risk metrics for Aave"
+        />
+      </head>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="dark">
+          <SiteHeader/>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
