@@ -1,9 +1,10 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 
 // Import routes
 const reservesRouter = require('./api/reserves');
-
+app.use(cors())
 app.use('/api/reserves', reservesRouter);
 
 app.get('/', (req, res) => {
