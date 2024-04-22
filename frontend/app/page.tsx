@@ -69,7 +69,7 @@ export default function Home() {
             </span>
           </p>
         </div>
-        <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center pr-4">
           <p className="text-xl font-medium">AAVE-v3</p>
           <img src="/ethereum.svg" alt="AAVE Logo" className="h-20 w-30" />
         </div>
