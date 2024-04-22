@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getListOfReserves, getSupplyAmounts, getBorrowAmounts, getSupplyAndBorrowCaps } = require('../services/aaveService');
+const { getListOfReserves, getSupplyAmounts, getBorrowAmounts, getSupplyAndBorrowCaps, getLatestTimestamp } = require('../services/aaveService');
 const { getTokenPrices } = require('../services/priceService')
 const { formatTokenAmounts, formatReserveCaps } = require('../helpers');  // Adjust the path as necessary
 
@@ -47,6 +47,16 @@ router.get('/caps', async (req, res) => {
 router.get('/prices', async (req, res) => {
   try {
       const data = await getTokenPrices();
+      res.json(data);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/timestamp', async (req, res) => {
+  try {
+      // Fetch the latest timestamp and the block number on etheruem
+      const data = await getLatestTimestamp()
       res.json(data);
   } catch (error) {
       res.status(500).json({ error: error.message });

@@ -31,7 +31,7 @@ export default function Home() {
         <h4 className="text-3xl font-semibold mr-4">AAVE Risk Dashboard</h4>
         <p>12-01-2024 13:43:24 hrs</p>
       </div>
-      <div className="flex w-full justify-between">
+      <div className="flex w-full justify-between mt-4">
         <div className="flex gap-x-10">
           <Card className="w-[250px]">
             <CardHeader>
