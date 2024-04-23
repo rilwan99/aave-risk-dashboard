@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { getListOfReserves, getSupplyAmounts, getBorrowAmounts, getSupplyAndBorrowCaps, getLatestTimestamp } = require('../services/aaveService');
+const { getListOfReserves, getSupplyAmounts, getBorrowAmounts, getSupplyAndBorrowCaps, getLatestTimestamp, getReserveConfig, aggregateAllData, getAggregatedData } = require('../services/aaveService');
 const { getTokenPrices } = require('../services/priceService')
-const { formatTokenAmounts, formatReserveCaps } = require('../helpers');  // Adjust the path as necessary
+const { formatTokenAmounts, formatReserveCaps, formatReserveConfig } = require('../helpers');  // Adjust the path as necessary
 
 
 router.get('/', async (req, res) => {
@@ -57,6 +57,26 @@ router.get('/timestamp', async (req, res) => {
   try {
       // Fetch the latest timestamp and the block number on etheruem
       const data = await getLatestTimestamp()
+      res.json(data);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/reserveConfig', async (req, res) => {
+  try {
+      // Fetch the latest timestamp and the block number on etheruem
+      const data = await getReserveConfig()
+      const formattedReserveConfig = formatReserveConfig(data)
+      res.json(formattedReserveConfig);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/overview', async (req, res) => {
+  try {
+      const data = await getAggregatedData()
       res.json(data);
   } catch (error) {
       res.status(500).json({ error: error.message });

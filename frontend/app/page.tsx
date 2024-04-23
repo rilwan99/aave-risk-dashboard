@@ -22,9 +22,6 @@ export default function Home() {
     totalSupply: "12,343,432 USD",
     totalBorrow: "1,144,123 USD",
     tvl: "10,943,342 USD",
-    totalGasInUsd: "$USD 43234",
-    uniqueAccountsInteracted: 1322,
-    accountType: "Program Accounts",
   };
 
   useEffect(() => {

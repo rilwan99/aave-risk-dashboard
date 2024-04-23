@@ -29,9 +29,9 @@ async function getListOfReserves() {
   }
 }
 
-async function getSupplyAmounts() {
+async function getSupplyAmounts(listOfReserves) {
   try {
-    const tokenDetails = await getListOfReserves();
+    const tokenDetails = listOfReserves || (await getListOfReserves());
     const supplyAmountPromises = tokenDetails.map((token) =>
       contract.getATokenTotalSupply(token.address).then((supplyAmount) => ({
         symbol: token.symbol,
@@ -46,9 +46,9 @@ async function getSupplyAmounts() {
   }
 }
 
-async function getBorrowAmounts() {
+async function getBorrowAmounts(listOfReserves) {
   try {
-    const tokenDetails = await getListOfReserves();
+    const tokenDetails = listOfReserves || (await getListOfReserves());
     const borrowAmountPromises = tokenDetails.map((token) =>
       contract.getTotalDebt(token.address).then((borrowAmount) => ({
         symbol: token.symbol,
@@ -63,9 +63,9 @@ async function getBorrowAmounts() {
   }
 }
 
-async function getSupplyAndBorrowCaps() {
+async function getSupplyAndBorrowCaps(listOfReserves) {
   try {
-    const tokenDetails = await getListOfReserves();
+    const tokenDetails = listOfReserves || (await getListOfReserves());
     const supplyAndBorrowCapPromises = tokenDetails.map(async (token) => {
       const reserveCaps = await contract.getReserveCaps(token.address);
       return {
@@ -96,10 +96,162 @@ async function getLatestTimestamp() {
   }
 }
 
+async function getReserveConfig(listOfReserves) {
+  try {
+    const tokenDetails = listOfReserves || (await getListOfReserves());
+    const reserveConfigPromises = tokenDetails.map(async (token) => {
+      const reserveConfig = await contract.getReserveConfigurationData(
+        token.address
+      );
+      return {
+        symbol: token.symbol,
+        decimals: reserveConfig.decimals,
+        ltv: reserveConfig.ltv,
+        liquidationThreshold: reserveConfig.liquidationThreshold,
+      };
+    });
+    const aggragtedReserveConfig = await Promise.all(reserveConfigPromises);
+
+    return aggragtedReserveConfig;
+  } catch (error) {
+    console.error("Failed to fetch reserveConfig:", error);
+    throw error;
+  }
+}
+
+async function getAggregatedData() {
+  try {
+    const reserves = await getListOfReserves();
+
+    const [supply, borrow, caps, reserveConfig] = await Promise.all([
+      getSupplyAmounts(reserves),
+      getBorrowAmounts(reserves),
+      getSupplyAndBorrowCaps(reserves),
+      getReserveConfig(reserves),
+    ]);
+
+    // Aggregate all relevant reserve data into a single array
+    const aggregatedReserveData = aggregateReserveData({
+      reserves,
+      supply,
+      borrow,
+      caps,
+      reserveConfig,
+    });
+
+    const includeUtilizationRate = calculateUtilizationRate(
+      aggregatedReserveData
+    );
+
+    const includeLimitsUsed = calculateLimitsUsed(includeUtilizationRate);
+
+    const includePriceData = calculatePriceData(includeLimitsUsed)
+
+    console.log(includePriceData)
+    return includePriceData;
+  } catch (error) {
+    console.error("Failed to aggregate data:", error);
+    throw error;
+  }
+}
+
+function aggregateReserveData(data) {
+  const { reserves, supply, borrow, caps, reserveConfig } = data;
+
+  // Create a map to easily find metrics for each token
+  const supplyMap = new Map(supply.map((item) => [item.symbol, item.amount]));
+  const borrowMap = new Map(borrow.map((item) => [item.symbol, item.amount]));
+
+  const capsMap = new Map(
+    caps.map((item) => [
+      item.symbol,
+      { borrowCap: item.borrowCap, supplyCap: item.supplyCap },
+    ])
+  );
+  const configMap = new Map(
+    reserveConfig.map((item) => [
+      item.symbol,
+      {
+        decimals: item.decimals,
+        ltv: item.ltv,
+        liquidationThreshold: item.liquidationThreshold,
+      },
+    ])
+  );
+
+  // Merge all data into one array
+  return reserves.map((token) => ({
+    symbol: token.symbol,
+    address: token.address,
+    supplyAmount: supplyMap.get(token.symbol),
+    borrowAmount: borrowMap.get(token.symbol),
+    borrowCap: capsMap.get(token.symbol)?.borrowCap,
+    supplyCap: capsMap.get(token.symbol)?.supplyCap,
+    decimals: configMap.get(token.symbol)?.decimals,
+    ltv: configMap.get(token.symbol)?.ltv,
+    liquidationThreshold: configMap.get(token.symbol)?.liquidationThreshold,
+  }));
+}
+
+function calculateUtilizationRate(data) {
+  return data.map((token) => {
+    const { supplyAmount, borrowAmount } = token;
+
+    let utilizationRate = '0%'; 
+
+    if (supplyAmount > 0n && borrowAmount > 0n) {
+      let calculatedRate = (borrowAmount * 100n) / supplyAmount; // Express result as percentage
+
+      if (calculatedRate < 1n) {
+        utilizationRate = '<1%'; 
+      } else {
+        utilizationRate = calculatedRate.toString() + '%'; 
+      }
+    }
+
+    return {
+      ...token,
+      utilizationRate 
+    };
+  });
+}
+
+function calculateLimitsUsed(data) {
+  return data.map(token => {
+    const { supplyAmount, supplyCap, borrowAmount, borrowCap, decimals } = token;
+    
+    // Convert amounts to a comparable scale to caps
+    const scaleFactor = BigInt(10 ** Number(decimals));
+
+    const normalizedSupplyAmount = supplyAmount / scaleFactor;
+    const normalizedBorrowAmount = borrowAmount / scaleFactor;
+
+    let supplyLimitUsed = '0%'; // Default to 0% if supplyCap is zero
+    if (supplyCap > 0n) {
+      const supplyPercentage = (normalizedSupplyAmount * 100n) / BigInt(supplyCap); // Calculate percentage
+      supplyLimitUsed = supplyPercentage > 0n && supplyPercentage < 1n ? '<1%' : supplyPercentage.toString() + '%';
+    }
+
+    let borrowLimitUsed = '0%'; // Default to 0% if borrowCap is zero
+    if (borrowCap > 0n) {
+      const borrowPercentage = (normalizedBorrowAmount * 100n) / BigInt(borrowCap); // Calculate percentage
+      borrowLimitUsed = borrowPercentage > 0n && borrowPercentage < 1n ? '<1%' : borrowPercentage.toString() + '%';
+    }
+
+    return {
+      ...token,
+      supplyLimitUsed, 
+      borrowLimitUsed 
+    };
+  });
+}
+
 module.exports = {
   getListOfReserves,
   getSupplyAmounts,
   getBorrowAmounts,
   getSupplyAndBorrowCaps,
-  getLatestTimestamp
+  getLatestTimestamp,
+  getReserveConfig,
+  getAggregatedData,
 };
