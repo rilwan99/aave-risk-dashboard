@@ -2,6 +2,7 @@ export async function GET(request: Request) {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL
       const response = await fetch(`${apiUrl}/api/overview`);
+      console.log(`Sending request to ${apiUrl}/api/overview`)
       if (!response.ok) {
         throw new Error(
           `Failed to fetch reserve Data: ${response.status} ${response.statusText}`
@@ -9,6 +10,7 @@ export async function GET(request: Request) {
       }
   
       const result = await response.json();
+
       return new Response(JSON.stringify(result), {
         status: 200,
         headers: {

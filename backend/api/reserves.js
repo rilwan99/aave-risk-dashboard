@@ -57,6 +57,7 @@ router.get('/timestamp', async (req, res) => {
   try {
       // Fetch the latest timestamp and the block number on etheruem
       const data = await getLatestTimestamp()
+      console.log('/timestamp invoked')
       res.json(data);
   } catch (error) {
       res.status(500).json({ error: error.message });
@@ -77,6 +78,7 @@ router.get('/reserveConfig', async (req, res) => {
 router.get('/overview', async (req, res) => {
   try {
       const data = await getAggregatedData()
+      console.log('/overview invoked')
       res.json(data);
   } catch (error) {
       res.status(500).json({ error: error.message });

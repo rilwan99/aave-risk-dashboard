@@ -12,24 +12,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 import TransactionBarChart from "@/components/ui/chart";
 import { MetricsTable } from "@/components/metrics-table";
-// import dummyData from '@/data.json';
-
+// import dummyData from "@/data.json";
 
 export default function Home() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [timestamp, setTimestamp] = useState("");
   const [blockNumber, setBlockNumber] = useState("");
 
   const [reserveData, setReserveData] = useState([]);
   const [totalSupply, setTotalSupply] = useState("");
-  const [totalBorrow, setTotalBorrow] = useState("")
-  const [totalValueLocked, setTotalValueLocked] = useState("")
+  const [totalBorrow, setTotalBorrow] = useState("");
+  const [totalValueLocked, setTotalValueLocked] = useState("");
 
   const fetchTimestamp = async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/timestamp");
       const result = await response.json();
+
+      console.log("fetchTimestamp");
+      console.log(result);
+
       setTimestamp(new Date(result.timestamp * 1000).toLocaleString());
       setBlockNumber(result.blockNumber);
     } catch (error) {
@@ -46,26 +49,28 @@ export default function Home() {
     try {
       const response = await fetch("/api/overview");
       const result = await response.json();
-      console.log('result: ')
-      console.log(result)
+      console.log("fetchReserveData: ");
+      console.log(result);
 
-
-      setReserveData(result.reserveData)
-      setTotalSupply(result.totals.totalSupply)
-      setTotalBorrow(result.totals.totalBorrow)
-      setTotalValueLocked(result.totals.totalValueLocked)
-
- 
+      setReserveData(result.reserveData);
+      setTotalSupply(result.totals.totalSupplyValue);
+      setTotalBorrow(result.totals.totalBorrowValue);
+      setTotalValueLocked(result.totals.totalValueLocked);
     } catch (error) {
       console.error("Failed to fetch the reserve Data:", error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchTimestamp();
     fetchReserveData();
+
+    // setReserveData(dummyData.reserveData);
+    // setTotalSupply(dummyData.totals.totalSupplyValue);
+    // setTotalBorrow(dummyData.totals.totalBorrowValue);
+    // setTotalValueLocked(dummyData.totals.totalValueLocked);
   }, []);
 
   return (
@@ -127,7 +132,11 @@ export default function Home() {
         </div>
       </div>
       <div className="w-full mt-5">
-        <MetricsTable reserveData={reserveData}/>
+        <MetricsTable
+          reserveData={reserveData}
+          totalSupplyValue={totalSupply}
+          totalBorrowValue={totalBorrow}
+        />
       </div>
     </main>
   );

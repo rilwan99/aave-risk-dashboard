@@ -150,8 +150,6 @@ async function getAggregatedData() {
     const includePriceData = calculatePriceData(includeLimitsUsed, priceData);
 
     const formattedRiskMetrics = formatResults(includePriceData);
-
-    console.log(formattedRiskMetrics)
     return formattedRiskMetrics;
   } catch (error) {
     console.error("Failed to aggregate data:", error);

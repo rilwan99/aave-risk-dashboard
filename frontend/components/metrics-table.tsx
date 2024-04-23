@@ -9,12 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const aggregatedData = {
-  totalSupplyValue: 33123421,
-  totalBorrowValue: 6453532,
-};
-
-export function MetricsTable({ reserveData }) {
+export function MetricsTable({ reserveData, totalSupplyValue, totalBorrowValue }) {
   const getPercentageClass = (percentage) => {
     const value = parseFloat(percentage.replace("%", ""));
 
@@ -77,11 +72,11 @@ export function MetricsTable({ reserveData }) {
       <TableFooter>
         <TableRow>
           <TableCell colSpan={5}>Total</TableCell>
-          <TableCell>{aggregatedData.totalSupplyValue}</TableCell>
+          <TableCell>{totalSupplyValue}</TableCell>
           <TableCell> </TableCell>
           <TableCell> </TableCell>
           <TableCell> </TableCell>
-          <TableCell>{aggregatedData.totalBorrowValue}</TableCell>
+          <TableCell>{totalBorrowValue}</TableCell>
           <TableCell> </TableCell>
           <TableCell> </TableCell>
         </TableRow>
