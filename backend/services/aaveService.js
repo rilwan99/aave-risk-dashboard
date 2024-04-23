@@ -147,10 +147,12 @@ async function getAggregatedData() {
     const includeLimitsUsed = calculateLimitsUsed(includeUtilizationRate);
 
     const priceData = await getTokenPrices(reserves);
-    const includePriceData = calculatePriceData(includeLimitsUsed, priceData)
+    const includePriceData = calculatePriceData(includeLimitsUsed, priceData);
 
-    console.log(includePriceData)
-    return includePriceData;
+    const formattedRiskMetrics = formatResults(includePriceData);
+
+    console.log(formattedRiskMetrics);
+    return formattedRiskMetrics;
   } catch (error) {
     console.error("Failed to aggregate data:", error);
     throw error;
@@ -199,64 +201,73 @@ function calculateUtilizationRate(data) {
   return data.map((token) => {
     const { supplyAmount, borrowAmount } = token;
 
-    let utilizationRate = '0%'; 
+    let utilizationRate = "0%";
 
     if (supplyAmount > 0n && borrowAmount > 0n) {
       let calculatedRate = (borrowAmount * 100n) / supplyAmount; // Express result as percentage
 
       if (calculatedRate < 1n) {
-        utilizationRate = '<1%'; 
+        utilizationRate = "<1%";
       } else {
-        utilizationRate = calculatedRate.toString() + '%'; 
+        utilizationRate = calculatedRate.toString() + "%";
       }
     }
 
     return {
       ...token,
-      utilizationRate 
+      utilizationRate,
     };
   });
 }
 
 function calculateLimitsUsed(data) {
-  return data.map(token => {
-    const { supplyAmount, supplyCap, borrowAmount, borrowCap, decimals } = token;
-    
+  return data.map((token) => {
+    const { supplyAmount, supplyCap, borrowAmount, borrowCap, decimals } =
+      token;
+
     // Convert amounts to a comparable scale to caps
     const scaleFactor = BigInt(10 ** Number(decimals));
 
     const normalizedSupplyAmount = supplyAmount / scaleFactor;
     const normalizedBorrowAmount = borrowAmount / scaleFactor;
 
-    let supplyLimitUsed = '0%'; // Default to 0% if supplyCap is zero
+    let supplyLimitUsed = "0%"; // Default to 0% if supplyCap is zero
     if (supplyCap > 0n) {
-      const supplyPercentage = (normalizedSupplyAmount * 100n) / BigInt(supplyCap); // Calculate percentage
-      supplyLimitUsed = supplyPercentage > 0n && supplyPercentage < 1n ? '<1%' : supplyPercentage.toString() + '%';
+      const supplyPercentage =
+        (normalizedSupplyAmount * 100n) / BigInt(supplyCap); // Calculate percentage
+      supplyLimitUsed =
+        supplyPercentage > 0n && supplyPercentage < 1n
+          ? "<1%"
+          : supplyPercentage.toString() + "%";
     }
 
-    let borrowLimitUsed = '0%'; // Default to 0% if borrowCap is zero
+    let borrowLimitUsed = "0%"; // Default to 0% if borrowCap is zero
     if (borrowCap > 0n) {
-      const borrowPercentage = (normalizedBorrowAmount * 100n) / BigInt(borrowCap); // Calculate percentage
-      borrowLimitUsed = borrowPercentage > 0n && borrowPercentage < 1n ? '<1%' : borrowPercentage.toString() + '%';
+      const borrowPercentage =
+        (normalizedBorrowAmount * 100n) / BigInt(borrowCap); // Calculate percentage
+      borrowLimitUsed =
+        borrowPercentage > 0n && borrowPercentage < 1n
+          ? "<1%"
+          : borrowPercentage.toString() + "%";
     }
 
     return {
       ...token,
-      supplyLimitUsed, 
-      borrowLimitUsed 
+      supplyLimitUsed,
+      borrowLimitUsed,
     };
   });
 }
 
 function calculatePriceData(tokenData, priceData) {
-  const priceMap = new Map(priceData.map(item => [item.symbol, item.price]));
+  const priceMap = new Map(priceData.map((item) => [item.symbol, item.price]));
 
-  return tokenData.map(token => {
+  return tokenData.map((token) => {
     const { symbol, supplyAmount, borrowAmount, decimals } = token;
-    const price = priceMap.get(symbol) || 0; 
+    const price = priceMap.get(symbol) || 0;
 
     const scaleFactor = BigInt(10 ** Number(decimals));
-    const normalizedSupplyAmount = Number(supplyAmount / scaleFactor); 
+    const normalizedSupplyAmount = Number(supplyAmount / scaleFactor);
     const normalizedBorrowAmount = Number(borrowAmount / scaleFactor);
 
     // Calculate supplyValue and borrowValue using the normalized amounts
@@ -265,12 +276,60 @@ function calculatePriceData(tokenData, priceData) {
 
     return {
       ...token,
-      supplyValue: supplyValue.toFixed(2), 
-      borrowValue: borrowValue.toFixed(2) 
+      supplyValue: supplyValue.toFixed(2),
+      borrowValue: borrowValue.toFixed(2),
     };
   });
 }
 
+function formatResults(data) {
+  return data.map((token) => {
+    const {
+      symbol,
+      address,
+      supplyAmount,
+      borrowAmount,
+      borrowCap,
+      supplyCap,
+      decimals,
+      ltv,
+      liquidationThreshold,
+      utilizationRate,
+      supplyLimitUsed,
+      borrowLimitUsed,
+      supplyValue,
+      borrowValue,
+    } = token;
+
+    const formatNumber = (num) => {
+      return Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
+    };
+
+    const scaleFactor = BigInt(10 ** Number(decimals));
+    const formattedSupplyAmount = formatNumber(supplyAmount / scaleFactor);
+    const formattedBorrowAmount = formatNumber(borrowAmount / scaleFactor);
+
+    const formattedLtv = (Number(ltv) / 100).toFixed(2) + "%";
+    const formattedLiquidationThreshold =
+      (Number(liquidationThreshold) / 100).toFixed(2) + "%";
+
+    return {
+      symbol,
+      address,
+      supplyAmount: formattedSupplyAmount,
+      borrowAmount: formattedBorrowAmount,
+      borrowCap: formatNumber(borrowCap),
+      supplyCap: formatNumber(supplyCap),
+      ltv: formattedLtv,
+      liquidationThreshold: formattedLiquidationThreshold,
+      utilizationRate,
+      supplyLimitUsed,
+      borrowLimitUsed,
+      supplyValue: formatNumber(supplyValue),
+      borrowValue: formatNumber(borrowValue),
+    };
+  });
+}
 
 module.exports = {
   getListOfReserves,
