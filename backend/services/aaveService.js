@@ -151,7 +151,7 @@ async function getAggregatedData() {
 
     const formattedRiskMetrics = formatResults(includePriceData);
 
-    console.log(formattedRiskMetrics);
+    console.log(formattedRiskMetrics)
     return formattedRiskMetrics;
   } catch (error) {
     console.error("Failed to aggregate data:", error);
@@ -262,7 +262,10 @@ function calculateLimitsUsed(data) {
 function calculatePriceData(tokenData, priceData) {
   const priceMap = new Map(priceData.map((item) => [item.symbol, item.price]));
 
-  return tokenData.map((token) => {
+  let totalSupplyValue = 0;
+  let totalBorrowValue = 0;
+
+  const individualReserveData = tokenData.map((token) => {
     const { symbol, supplyAmount, borrowAmount, decimals } = token;
     const price = priceMap.get(symbol) || 0;
 
@@ -270,9 +273,11 @@ function calculatePriceData(tokenData, priceData) {
     const normalizedSupplyAmount = Number(supplyAmount / scaleFactor);
     const normalizedBorrowAmount = Number(borrowAmount / scaleFactor);
 
-    // Calculate supplyValue and borrowValue using the normalized amounts
     const supplyValue = normalizedSupplyAmount * price;
     const borrowValue = normalizedBorrowAmount * price;
+
+    totalSupplyValue += supplyValue;
+    totalBorrowValue += borrowValue;
 
     return {
       ...token,
@@ -280,10 +285,28 @@ function calculatePriceData(tokenData, priceData) {
       borrowValue: borrowValue.toFixed(2),
     };
   });
+
+  const totalValueLocked = totalSupplyValue - totalBorrowValue;
+
+  return {
+    individualReserveData,
+    totals: {
+      totalSupplyValue: totalSupplyValue.toFixed(2),
+      totalBorrowValue: totalBorrowValue.toFixed(2),
+      totalValueLocked: totalValueLocked.toFixed(2),
+    },
+  };
 }
 
-function formatResults(data) {
-  return data.map((token) => {
+function formatResults(result) {
+  const { individualReserveData, totals } = result;
+
+  const formatNumber = (num) => {
+    return Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  };
+
+  // Format each token's data
+  const formattedData = individualReserveData.map((token) => {
     const {
       symbol,
       address,
@@ -301,17 +324,12 @@ function formatResults(data) {
       borrowValue,
     } = token;
 
-    const formatNumber = (num) => {
-      return Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
-    };
-
     const scaleFactor = BigInt(10 ** Number(decimals));
-    const formattedSupplyAmount = formatNumber(supplyAmount / scaleFactor);
-    const formattedBorrowAmount = formatNumber(borrowAmount / scaleFactor);
+    const formattedSupplyAmount = formatNumber((supplyAmount) / scaleFactor);
+    const formattedBorrowAmount = formatNumber((borrowAmount) / scaleFactor);
 
-    const formattedLtv = (Number(ltv) / 100).toFixed(2) + "%";
-    const formattedLiquidationThreshold =
-      (Number(liquidationThreshold) / 100).toFixed(2) + "%";
+    const formattedLtv = `${(Number(ltv) / 100).toFixed(2)}%`;
+    const formattedLiquidationThreshold = `${(Number(liquidationThreshold) / 100).toFixed(2)}%`;
 
     return {
       symbol,
@@ -329,7 +347,19 @@ function formatResults(data) {
       borrowValue: formatNumber(borrowValue),
     };
   });
+
+  const formattedTotals = {
+    totalSupplyValue: formatNumber(totals.totalSupplyValue),
+    totalBorrowValue: formatNumber(totals.totalBorrowValue),
+    totalValueLocked: formatNumber(totals.totalValueLocked)
+  };
+
+  return {
+    reserveData: formattedData,
+    totals: formattedTotals
+  };
 }
+
 
 module.exports = {
   getListOfReserves,

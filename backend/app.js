@@ -5,7 +5,7 @@ const app = express();
 // Import routes
 const reservesRouter = require('./api/reserves');
 app.use(cors())
-app.use('/api/reserves', reservesRouter);
+app.use('/api', reservesRouter);
 
 app.get('/', (req, res) => {
     res.send('Service is Running');
