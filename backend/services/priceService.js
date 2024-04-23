@@ -1,13 +1,13 @@
 const axios = require("axios");
 require("dotenv").config();
-const { getListOfReserves } = require("./aaveService");
 
-async function getTokenPrices() {
+async function getTokenPrices(listOfReserves) {
   const apiKey = process.env.COINMARKETCAP_API_KEY;
   const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest`;
 
   try {
-    const reserves = await getListOfReserves();
+    const reserves = listOfReserves;
+
     const symbols = reserves
       .map((token) => {
         return token.symbol;

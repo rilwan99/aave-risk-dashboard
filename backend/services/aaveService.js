@@ -5,6 +5,7 @@ require("dotenv").config();
 const aaveProtocolDataProviderAddress =
   process.env.AAVE_PROTOCOL_DATA_PROVIDER_ADDRESS;
 const aaveProtocolDataProviderAbi = require("../config/abi/aaveProtocolDataProvider.json");
+const { getTokenPrices } = require("./priceService");
 const contract = new ethers.Contract(
   aaveProtocolDataProviderAddress,
   aaveProtocolDataProviderAbi,
@@ -145,7 +146,8 @@ async function getAggregatedData() {
 
     const includeLimitsUsed = calculateLimitsUsed(includeUtilizationRate);
 
-    const includePriceData = calculatePriceData(includeLimitsUsed)
+    const priceData = await getTokenPrices(reserves);
+    const includePriceData = calculatePriceData(includeLimitsUsed, priceData)
 
     console.log(includePriceData)
     return includePriceData;
@@ -245,6 +247,30 @@ function calculateLimitsUsed(data) {
     };
   });
 }
+
+function calculatePriceData(tokenData, priceData) {
+  const priceMap = new Map(priceData.map(item => [item.symbol, item.price]));
+
+  return tokenData.map(token => {
+    const { symbol, supplyAmount, borrowAmount, decimals } = token;
+    const price = priceMap.get(symbol) || 0; 
+
+    const scaleFactor = BigInt(10 ** Number(decimals));
+    const normalizedSupplyAmount = Number(supplyAmount / scaleFactor); 
+    const normalizedBorrowAmount = Number(borrowAmount / scaleFactor);
+
+    // Calculate supplyValue and borrowValue using the normalized amounts
+    const supplyValue = normalizedSupplyAmount * price;
+    const borrowValue = normalizedBorrowAmount * price;
+
+    return {
+      ...token,
+      supplyValue: supplyValue.toFixed(2), 
+      borrowValue: borrowValue.toFixed(2) 
+    };
+  });
+}
+
 
 module.exports = {
   getListOfReserves,
