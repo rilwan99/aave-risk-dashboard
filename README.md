@@ -7,6 +7,9 @@ This project is a comprehensive tool designed to analyze and monitor the risk as
 - **Real-time Analysis**: Monitor AAVE V3 metrics in real-time to assess ongoing risk.
 - **Health Metrics**: Utilize various indicators including total supply and borrow rates to gauge protocol health.
 
+![Screenshot 1](images/landing.png)
+
+
 ## Project Structure
 The project is organized into two main directories:
 - **frontend**: Contains all the frontend code built with Next.js, responsible for rendering the user interface.
