@@ -2,7 +2,16 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+### Environment Variables
+1. Create a .env file in the /frontend directory.
+2. Add the required environment variables as shown below. This includes the base URL for your backend API.
+3. Modify the environment variables as necessary. For instance, if you deploy your backend to a cloud service, update the NEXT_PUBLIC_API_URL with the URL of your deployed service
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:9000
+```
+
+Next, run the development server:
 
 ```bash
 npm run dev
@@ -28,9 +37,3 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
